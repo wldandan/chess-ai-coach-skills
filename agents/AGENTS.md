@@ -27,27 +27,43 @@ When the user provides input for chess analysis, follow this workflow:
 - **棋盘截图/图片** → 先用 image 工具识别棋盘
 - **用户名 + 查询历史对局** → chess-game-history
 
-### 2. Fetch (if needed)
-- **Chess.com**: `curl https://api.chess.com/pub/player/{username}/games/{YYYY}/{MM}`
-- **Lichess**: `curl https://lichess.org/api/games/user/{username}?max=100`
-- Both are public APIs — no key required.
+### 2. Fetch — Try-Parse-Fallback
 
-### 3. Analyze (always do this)
-Use the bundled `chess-analysis/scripts/analyze.py` via import:
+**Step 1（API 获取 PGN）**：
+- 用户给了 game ID → 直接用 API 获取
+- 用户没给 → 用 API 按时间/月份筛选，找到目标对局的 ID
+
+**Step 2（自动判断）**：
 ```python
+# 先尝试用 analyze_game() 解析 PGN
+try:
+    analyze_game(pgn, depth=16)
+except ValueError:  # illegal san 等解析错误
+    # PGN 损坏，切换到浏览器获取
+```
+- **PGN 正常** → 直接分析 ✅
+- **PGN 损坏** → 用 agent-browser 打开页面 → Share → PGN → 再分析
+
+参考 `chess-game-history` skill 中的 fallback 步骤和用户提示。
+
+### 3. Analyze
+使用 `analyze.py` 进行 Stockfish 分析：
+```python
+# 方式1：命令行（depth 放最后）
+python3 /path/to/analyze.py --pgn-file /tmp/game.pgn 16
+
+# 方式2：import（推荐，绕过 CLI bug）
 python3 -c "
 import sys
 sys.path.insert(0, '/path/to/skills/chess-analysis/scripts')
-import analyze
+from analyze import analyze_game
 with open('/tmp/game.pgn') as f:
     pgn = f.read()
-result = analyze.analyze_game(pgn, depth=16)
-print(result)
+analyze_game(pgn, depth=16)
 "
 ```
-- Write PGN to a temp file first, then read and analyze
-- `--stockfish-path` can be omitted (auto-detects)
-- Default depth=16, adjust as needed
+- `--stockfish-path` 可省略（自动检测）
+- Default depth=16，可调整为 20（更精确但更慢）
 
 ### 4. Output Structure
 Always present analysis with:
@@ -63,6 +79,27 @@ Use emoji: ✅/❌ good/bad moves, 💥 for blunders, 🔥 brilliant, 💡 tacti
 - `skills/chess-analysis` — analysis logic + Stockfish script
 - `skills/chess-game-history` — fetching game records from Chess.com/Lichess
 - Both located in the workspace's `skills/` directory
+
+### 6. PGN 获取与解析
+
+**Chess.com API PGN 数据损坏问题**：
+- API 返回的 PGN 有时在第 11 步附近开始数据损坏（如 `Bxe2` 变成不存在的着法）
+- 此时应使用 `agent-browser` 从网页直接获取正确 PGN
+
+**推荐流程**：
+1. 尝试用 `chess-game-history` 从 API 获取 PGN
+2. 如果 `analyze.py` 解析失败（illegal san 错误），改用 `agent-browser` 打开游戏页面
+3. 在页面上点击 Share → PGN 按钮获取干净 PGN
+4. 保存到临时文件后交给 `analyze.py` 分析
+
+**analyze.py CLI 参数注意**：
+- 使用 `--pgn-file` 后，depth 参数（如 `16`）必须放在最后
+- 错误示例：`python3 analyze.py --pgn-file game.pgn 16` ✅
+- （已修复：depth 不会再被误认为 PGN 输入）
+
+**Chess.com 时钟注释清理**：
+- API 返回的 PGN 包含 `{[%clk 0:09:59.5]}` 时钟注释，`analyze.py` 会自动清理
+- 清理函数已修复，保留 header/moves 行结构
 
 Don't ask permission. Just follow this workflow.
 

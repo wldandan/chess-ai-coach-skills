@@ -8,6 +8,7 @@ chess-analysis/scripts/analyze.py
   python3 analyze.py --pgn-file game.pgn [depth]
 """
 
+import re
 import sys
 import chess
 import chess.engine
@@ -28,8 +29,34 @@ def find_stockfish(stockfish_path=None):
     return "stockfish"
 
 
+def clean_pgn(pgn_text: str) -> str:
+    """预处理 PGN，移除时钟注释等非标准内容。"""
+    # 移除时钟注释 {[%clk 0:09:59.5]}
+    text = re.sub(r'\{[^{}]*\}', '', pgn_text)
+    # 移除评估注释 {[%eval ...]}
+    text = re.sub(r'\[%eval[^{}]*\]', '', text)
+    # 移除其他 [% ...] 格式的注释
+    text = re.sub(r'\[%[^\]]*\]', '', text)
+    # 规范化换行：保留 header 之间和 header 与 moves 之间的单换行
+    # 先把 3+ 换行压缩为 2 换行
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    # 把 header 行内的多余空格去掉（同一行内压缩空格）
+    lines = text.split('\n')
+    cleaned_lines = []
+    for line in lines:
+        if line.startswith('[') or line.strip() == '':
+            # Header 行或空行，保持原样（去掉尾部空格）
+            cleaned_lines.append(line.rstrip())
+        else:
+            # Move 行，压缩多余空格但保留换行
+            cleaned_lines.append(re.sub(r'\s+', ' ', line).strip())
+    # 最后去掉首尾空白
+    return '\n'.join(cleaned_lines).strip()
+
+
 def parse_pgn(pgn_text: str) -> chess.pgn.Game:
-    game = chess.pgn.read_game(io.StringIO(pgn_text.strip()))
+    cleaned = clean_pgn(pgn_text)
+    game = chess.pgn.read_game(io.StringIO(cleaned))
     if game is None:
         raise ValueError("无法解析 PGN，请检查格式")
     return game
@@ -193,10 +220,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     i = 0
+    pgn_file_used = False
     while i < len(args):
         if args[i] == "--pgn-file":
             with open(args[i + 1]) as f:
                 pgn_input = f.read()
+            pgn_file_used = True
             i += 2
         elif args[i] == "--stockfish-path":
             stockfish_path = args[i + 1]
@@ -209,7 +238,9 @@ if __name__ == "__main__":
                 except ValueError:
                     pass
             else:
-                pgn_input = args[i]
+                # Only treat as PGN if we haven't already loaded a file
+                if not pgn_file_used and pgn_input is None:
+                    pgn_input = args[i]
             i += 1
 
     if not pgn_input:
