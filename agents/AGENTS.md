@@ -80,16 +80,11 @@ Use emoji: ✅/❌ good/bad moves, 💥 for blunders, 🔥 brilliant, 💡 tacti
 - `skills/chess-game-history` — fetching game records from Chess.com/Lichess
 - Both located in the workspace's `skills/` directory
 
-### 6. 复盘后同步
+### 6. 复盘后自动同步
 
-**每次复盘完成后，立即同步到 git repo：**
-```bash
-./git-sync.sh "复盘：{白方} vs {黑方} {日期}"
-```
+**无需手动操作！** `review-sync` hook 会在复盘消息发送后自动同步到 `git@github.com:wldandan/chess-reviews-summary.git`
 
-这会把 memory/ 目录下的复盘记录保存到 `git@github.com:wldandan/chess-reviews-summary.git`
-
-**注意：** 无需等待用户确认，每次复盘后自动执行。
+Hook 配置：`~/.openclaw/hooks/review-sync/`
 
 ### 7. PGN 获取与解析
 
