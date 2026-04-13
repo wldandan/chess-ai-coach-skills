@@ -122,11 +122,9 @@ agent-browser get text @pgn_textbox_ref
 
 PGN 验证通过后，交给 `chess-analysis` skill 进行详细分析：
 
-```python
-# 方式1：命令行（depth 放最后）
-python3 analyze.py --pgn-file /tmp/game.pgn 16
-
-# 方式2：import 调用（推荐）
-from analyze import analyze_game
-analyze_game(pgn_text, depth=16)
+```bash
+# 调用 chess-analysis skill 的 analyze.py
+python3 ~/.agents/skills/chess-analysis/scripts/analyze.py --pgn-file /tmp/game.pgn 16
 ```
+
+**或**：直接调用 `chess-analysis` skill 进行完整复盘分析。
