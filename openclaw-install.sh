@@ -102,7 +102,7 @@ done
 
 # ── 3. Install workspace definition files (AGENTS.md, SOUL.md, etc.) ───────
 echo ""
-echo "[3/3] Installing workspace files -> $TARGET_WORKSPACE ..."
+echo "[3/4] Installing workspace files -> $TARGET_WORKSPACE ..."
 
 AGENTS_SRC="$SCRIPT_DIR/agents"
 if [ -d "$AGENTS_SRC" ]; then
@@ -127,6 +127,18 @@ if [ -d "$AGENTS_SRC" ]; then
     done
 else
     echo "  Warning: agents directory not found, skipping"
+fi
+
+# ── 4. Install git-sync.sh ───────────────────────────────────────────────
+echo ""
+echo "[4/4] Installing git-sync.sh -> $TARGET_WORKSPACE ..."
+
+if [ -f "$SCRIPT_DIR/git-sync.sh" ]; then
+    chmod +x "$SCRIPT_DIR/git-sync.sh"
+    cp "$SCRIPT_DIR/git-sync.sh" "$TARGET_WORKSPACE/git-sync.sh"
+    echo "  [copy] git-sync.sh -> $TARGET_WORKSPACE"
+else
+    echo "  Warning: git-sync.sh not found, skipping"
 fi
 
 # ── Summary ─────────────────────────────────────────────────────────────────

@@ -20,6 +20,10 @@ description: >
 
 两者均有免费公开 API，无需 API key。
 
+> ⚠️ **重要：Chess.com 对局列表按时间正序（最旧在前），永远不要直接取 `games[0]`！**
+> API 返回的列表第一个是最旧的棋局，最新的在列表末尾。
+> 正确做法：`latest_game = max(games, key=lambda g: g.get("end_time", 0))`
+
 ---
 
 ## 工作流程（Try-Parse-Fallback）
