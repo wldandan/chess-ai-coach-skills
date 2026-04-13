@@ -129,16 +129,16 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 
 **文件名格式：**
 ```
-{GameID}_{游戏日期}_{白方}_{结果}_{白方}vs{黑方}_{回合数}步.md
+{游戏日期}_{GameID}_{白方}_{结果}_{白方}vs{黑方}_{回合数}步.md
 ```
 
 **示例：**
 ```
-abc123_2026-04-11_aaronwang2026_执白败_aaronwang2026vsbabbabar_41步.md
+2026-04-11_abc123_aaronwang2026_执白败_aaronwang2026vsbabbabar_41步.md
 ```
 
 **唯一性保证：**
-- GameID + 游戏日期 + 白方 + 黑方 + 回合数 共同确保唯一
+- 游戏日期 + GameID + 白方 + 黑方 + 回合数 共同确保唯一
 - 同一棋局重复分析，文件名相同，会覆盖更新
 
 **文件内容格式：**
