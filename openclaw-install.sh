@@ -142,6 +142,32 @@ else
     echo "  Warning: git-sync.sh not found in chess-analysis/scripts/, skipping"
 fi
 
+# ── 5. Install OpenClaw hooks ─────────────────────────────────────────────
+echo ""
+echo "[5/5] Installing OpenClaw hooks -> ~/.openclaw/hooks/ ..."
+
+mkdir -p "$HOME/.openclaw/hooks"
+
+if [ -d "$SCRIPT_DIR/hooks" ]; then
+    for hook_dir in "$SCRIPT_DIR/hooks"/*; do
+        if [ -d "$hook_dir" ]; then
+            hook_name="$(basename "$hook_dir")"
+            dest="$HOME/.openclaw/hooks/$hook_name"
+
+            if [ -L "$dest" ]; then
+                echo "  [skip] $hook_name: already symlinked"
+            elif [ -e "$dest" ]; then
+                echo "  [skip] $hook_name: $dest exists"
+            else
+                echo "  [link] $hook_name -> $hook_dir"
+                ln -s "$hook_dir" "$dest"
+            fi
+        fi
+    done
+else
+    echo "  Warning: hooks directory not found, skipping"
+fi
+
 # ── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Installation Complete ==="
