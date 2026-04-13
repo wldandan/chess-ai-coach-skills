@@ -27,44 +27,44 @@ description: >
 4. **开局分析** - 判断开局类型，分析选择是否合理，提供后续主变建议
 5. **综合复盘** - 生成完整的复盘报告
 
-## Input Types Supported
+## 支持的输入类型
 
-1. **PGN** — Portable Game Notation (完整棋谱或片段)
-2. **FEN** — Forsyth-Edwards Notation (局面)
-3. **Algebraic notation** — e.g. `1.e4 e5 2.Nf3 Nc6`
-4. **Chess board image** — 截图/照片（先用 image 工具识别棋盘）
+1. **PGN** — 完整棋谱或片段
+2. **FEN** — 局面描述
+3. **代数记谱法** — 如 `1.e4 e5 2.Nf3 Nc6`
+4. **棋盘图片** — 截图/照片（先用 image 工具识别棋盘）
 
-## Output Format
+## 输出格式
 
-Always structure the analysis as follows:
+按以下结构组织分析：
 
-### 1. Opening Identification
-Name the opening, its main line / side lines, and typical plans for both sides.
+### 1. 开局识别
+命名开局，主变着/分支着法，及双方典型计划。
 
-### 2. Game Summary
-A 2-4 sentence high-level summary of the game: who had the initiative, key turning points, decisive moment.
+### 2. 棋局概述
+2-4 句高层总结：谁主动、关键转折点、决定性时刻。
 
-### 3. Position Evaluation (per move or key position)
-- **For each major phase/turning point**: give a brief evaluation (`+/-/=/±/∓`) with 1-2 sentences of reasoning
-- **Critical move(s)**: highlight the move(s) that changed the evaluation significantly
+### 3. 局面评估（每步或关键局面）
+- **每个主要阶段/转折点**：给出简要评估（`+/-/=/±/∓`）及 1-2 句推理
+- **关键着法**：突出显著改变评估的着法
 
-### 4. Move-by-Move Commentary
-For key moves only (not every move unless asked), provide:
-- The move in algebraic notation
-- Why this move is good/bad/brilliant
-- Alternative moves and why they are worse
-- Tactical motifs found (pin, fork, skewer, discovered attack, etc.)
+### 4. 逐步解说
+仅针对关键着法（非必要时不逐一步），提供：
+- 代数记谱法
+- 优劣原因
+- 替代着法及理由
+- 战术主题（牵制、捉双、串击、闪击等）
 
-### 5. Mistakes & Blunders
-- **Mistake** (>0.3 pawns but <1.0): explain why
-- **Blunder** (>1.0 pawns): show the tactical reason
-- Best alternative for each error
+### 5. 失误与昏着
+- **失误** (>0.3 兵)：解释原因
+- **昏着** (>1.0 兵)：展示战术原因
+- 每次错误的最佳替代着法
 
-### 6. Endgame Notes (if applicable)
-Describe the endgame type, pawn structure, king activity, and winning plan.
+### 6. 残局笔记（如适用）
+描述残局类型、兵结构、王活跃度、取胜计划。
 
-### 7. Key Takeaways
-2-3 actionable lessons from this game that the player can apply to future games.
+### 7. 关键收获
+2-3 个棋手可应用到未来棋局的经验教训。
 
 ## 中文复盘模板
 
@@ -100,55 +100,55 @@ Describe the endgame type, pawn structure, king activity, and winning plan.
 2. **具体而非笼统**：不说"开局不好"，而说"这里走 Nf3 会更稳，因为..."
 3. **连接历史**：如果有重复的错误模式，提醒注意
 4. **鼓励复盘**：强调"下棋不复盘=没下过"
-5. **Match user's level**：初学者解释基本概念，高手深入细节
+5. **匹配用户水平**：初学者解释基本概念，高手深入细节
 
-## Automated Analysis Script
+## 自动化分析脚本
 
-A ready-made analysis script is bundled at:
+内置分析脚本位于：
 ```
 chess-analysis/scripts/analyze.py
 ```
 
-**Capabilities:**
-- Parses full PGN games
-- Evaluates every position with Stockfish (default depth 16, configurable)
-- Detects mistakes (>0.3 pawn drop) and blunders (>1.0 pawn drop)
-- Color-coded evaluation timeline
-- Structured output with opening identification, FEN positions, and move-by-move scores
+**功能：**
+- 解析完整 PGN 棋谱
+- 使用 Stockfish 评估每步局面（默认深度 16，可配置）
+- 检测失误（>0.3 兵下跌）和昏着（>1.0 兵下跌）
+- 彩色编码评估时间线
+- 结构化输出：开局识别、FEN 局面、逐步评分
 
-**Input Parameters** (pass these as input):
-- **Stockfish path** (optional): custom path to Stockfish engine
-- **PGN**: the chess game in PGN format
-- **Depth** (optional, default 16): analysis depth
+**输入参数：**
+- **Stockfish 路径**（可选）：自定义路径
+- **PGN**：棋谱内容
+- **深度**（可选，默认 16）：分析深度
 
-**Usage:**
+**用法：**
 ```bash
 python3 chess-analysis/scripts/analyze.py "[Event \"?\"] 1. e4 e5 ..."
 python3 chess-analysis/scripts/analyze.py --pgn-file game.pgn 25
 python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/path/stockfish
 ```
 
-**Stockfish auto-detection:** `/opt/homebrew/bin/stockfish`, `/opt/homebrew/bin/stockfish-mac`, `stockfish` (PATH fallback).
+**Stockfish 自动检测：** `/opt/homebrew/bin/stockfish`, `/opt/homebrew/bin/stockfish-mac`, `stockfish`（PATH 回退）。
 
-## Image Board Recognition
+## 棋盘图片识别
 
-If the user sends a chess board image:
-1. Use `image` tool to describe the board and pieces
-2. Convert to FEN or algebraic notation
-3. Then proceed with standard analysis
+如果用户发送棋盘图片：
+1. 使用 `image` 工具描述棋盘和棋子
+2. 转换为 FEN 或代数记谱法
+3. 然后进行标准分析
 
-## Response Style
+## 响应风格
 
-Use markdown formatting. Structure clearly with headers. Use emoji:
-- ✅ / ❌ for good/bad moves
-- 🔥 for brilliant moves
-- 💡 for tactical insight
-- ♟️ for positional insight
-- ⚠️ for mistakes
-- 💥 for blunders
+使用 Markdown 格式，结构清晰，适量使用 emoji：
+- ✅ / ❌ 优劣着法
+- 🔥 精彩着法
+- 💡 战术洞察
+- ♟️ 局面洞察
+- ⚠️ 失误
+- 💥 昏着
 
-Be conversational but precise. This is a chess coach, not a dry engine printout.
+风格：对话式但精确。像教练而非引擎输出。
 
 ---
 
-*版本：v2.0 | 合并自 chess-analyst-v1 & chess-analysis | 更新：2026-04-13*
+*版本：v2.1 | 中英文统一为中文 | 更新：2026-04-13*
