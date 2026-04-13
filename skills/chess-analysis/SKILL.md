@@ -129,16 +129,18 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 
 **文件名格式：**
 ```
-{日期}_{白方棋手名}_{执白胜|执黑胜|和棋}_{白方棋手名}_vs_{黑方棋手名}.md
+{白方}_{结果}_{白方}vs{黑方}_{回合数}步.md
 ```
 
 **示例：**
 ```
-2026-04-11_babbabar_执黑胜_aaronwang2020_vs_babbabar.md
-2026-04-11_aaronwang2026_执白败_aaronwang2026_vs_babbabar.md
+aaronwang2026_执白败_aaronwang2026vsbabbabar_41步.md
+babbabar_执黑胜_babbabarvsaaronwang2026_41步.md
 ```
 
-**注意：** 文件名中包含胜负结果，便于后续按战绩统计和筛选。
+**唯一性保证：**
+- 同一棋局（相同白方、黑方、回合数）重复分析，文件名相同，会覆盖更新
+- 文件名中包含回合数，用于区分同一对棋手的多局棋
 
 **文件内容格式：**
 ```markdown
@@ -155,16 +157,6 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 ```
 
 **注意：** 保存动作在分析输出之后执行，不要影响正常回复速度。
-
-**自动同步到 Git 目录：**
-每次保存后，同步拷贝到 `~/Projects/tutorials/chess-reviews-summary/`，然后 git add + commit。Git hook（`scripts/post-commit`）会在每次 commit 后自动 push 到 GitHub：
-```bash
-# 1. 保存到本地 analyses/
-# 2. 拷贝到 git repo
-cp {文件名} ~/Projects/tutorials/chess-reviews-summary/
-# 3. commit（hook 自动 push）
-cd ~/Projects/tutorials/chess-reviews-summary && git add -A && git commit -m "Add chess review: {白方棋手名} vs {黑方棋手名} ({日期})"
-```
 
 ## 响应风格
 
