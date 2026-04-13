@@ -134,7 +134,7 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 
 **示例：**
 ```
-2026-04-11_abc123_aaronwang2026_执白败vsaaronwang2026_41步.md
+2026-04-11_abc123_aaronwang2026_执白败vsbabbabar_41步.md
 ```
 
 **唯一性保证：**
