@@ -129,12 +129,12 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 
 **文件名格式：**
 ```
-{游戏日期}_{GameID}_{白方}_{结果}_{白方}vs{黑方}_{回合数}步.md
+{游戏日期}_{GameID}_{白方}_{结果}vs{黑方}_{回合数}步.md
 ```
 
 **示例：**
 ```
-2026-04-11_abc123_aaronwang2026_执白败_aaronwang2026vsbabbabar_41步.md
+2026-04-11_abc123_aaronwang2026_执白败vsaaronwang2026_41步.md
 ```
 
 **唯一性保证：**
