@@ -129,16 +129,17 @@ else
     echo "  Warning: agents directory not found, skipping"
 fi
 
-# ── 4. Install git-sync.sh ───────────────────────────────────────────────
+# ── 4. Install git-sync.sh (from chess-analysis skill) ─────────────────
 echo ""
 echo "[4/4] Installing git-sync.sh -> $TARGET_WORKSPACE ..."
 
-if [ -f "$SCRIPT_DIR/git-sync.sh" ]; then
-    chmod +x "$SCRIPT_DIR/git-sync.sh"
-    cp "$SCRIPT_DIR/git-sync.sh" "$TARGET_WORKSPACE/git-sync.sh"
+GIT_SYNC_SRC="$SCRIPT_DIR/skills/chess-analysis/scripts/git-sync.sh"
+if [ -f "$GIT_SYNC_SRC" ]; then
+    chmod +x "$GIT_SYNC_SRC"
+    cp "$GIT_SYNC_SRC" "$TARGET_WORKSPACE/git-sync.sh"
     echo "  [copy] git-sync.sh -> $TARGET_WORKSPACE"
 else
-    echo "  Warning: git-sync.sh not found, skipping"
+    echo "  Warning: git-sync.sh not found in chess-analysis/scripts/, skipping"
 fi
 
 # ── Summary ─────────────────────────────────────────────────────────────────

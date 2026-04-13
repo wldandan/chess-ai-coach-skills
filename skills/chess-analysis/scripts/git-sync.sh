@@ -1,42 +1,49 @@
 #!/bin/bash
-# git-sync.sh — 提交并推送复盘文件到 GitHub
-# 用法: ./git-sync.sh "commit message"
-
 set -e
 
-REVIEWS_DIR="$HOME/.openclaw/workspace-chess-ai-coach/analyses"
-GIT_DIR="$HOME/Projects/tutorials/chess-reviews-summary"
-AUTHOR_NAME="aaronwang2026 Analyst"
-AUTHOR_EMAIL="5109343@qq.com"
+# Git Sync Script for Chess Reviews
+# Syncs review results to the chess-reviews-summary repository
 
-cd "$GIT_DIR"
+REVIEWS_REPO="git@github.com:wldandan/chess-reviews-summary.git"
+REVIEWS_DIR="$HOME/.openclaw/chess-reviews-summary"
 
-if [ ! -d ".git" ]; then
-    echo "Error: $GIT_DIR is not a git repo"
-    exit 1
+# Function to sync reviews
+sync_reviews() {
+    local message="${1:-Update chess review}"
+
+    # Clone or pull the reviews repo
+    if [ -d "$REVIEWS_DIR/.git" ]; then
+        cd "$REVIEWS_DIR"
+        git pull --rebase origin main
+    else
+        git clone "$REVIEWS_REPO" "$REVIEWS_DIR"
+        cd "$REVIEWS_DIR"
+    fi
+
+    # Copy new review files from workspace memory
+    local workspace_memory="$HOME/.openclaw/workspace-chess-ai-coach/memory"
+    if [ -d "$workspace_memory" ] && [ "$(ls -A "$workspace_memory" 2>/dev/null)" ]; then
+        # Copy new/changed memory files
+        for f in "$workspace_memory"/*.md; do
+            if [ -f "$f" ]; then
+                cp "$f" .
+                git add "$(basename "$f")"
+            fi
+        done
+    fi
+
+    # Commit and push if there are changes
+    if git diff --cached --quiet; then
+        echo "No changes to sync"
+        return 0
+    fi
+
+    git commit -m "$message"
+    git push origin main
+    echo "Reviews synced successfully"
+}
+
+# Run if called directly
+if [ "$(basename "$0")" = "git-sync.sh" ]; then
+    sync_reviews "$@"
 fi
-
-# 检查是否有新文件或变更
-if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
-    echo "Nothing to commit"
-    exit 0
-fi
-
-# 配置 git（防止全局配置干扰）
-git config user.name "$AUTHOR_NAME"
-git config user.email "$AUTHOR_EMAIL"
-
-# 同步最新文件
-rsync -av --include='*/' --exclude='*' "$REVIEWS_DIR/" "$GIT_DIR/" 2>/dev/null || cp "$REVIEWS_DIR"/*.md "$GIT_DIR/" 2>/dev/null || true
-
-# 添加所有变更
-git add -A
-
-# 提交
-MSG="${1:-"Update chess reviews $(date '+%Y-%m-%d %H:%M')"}"
-git commit -m "$MSG"
-
-# 推送到远程
-git push origin main
-
-echo "Done: $MSG"
