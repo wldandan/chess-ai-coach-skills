@@ -11,6 +11,9 @@ set -e
 #   <repo>/
 #   ├── skills/
 #   │   ├── chess-analysis/
+#   │   │   └── scripts/
+#   │   │       ├── analyze.py
+#   │   │       └── git-sync.sh
 #   │   └── chess-game-history/
 #   ├── agents/           ← workspace definition files (AGENTS.md, SOUL.md, etc.)
 #   ├── commands/          ← (optional)
@@ -18,13 +21,12 @@ set -e
 #
 # Expected target structure after install:
 #   ~/.agents/skills/                   ← global, all agents share
-#   │   ├── chess-analysis/
-#   │   └── chess-game-history/
+#   │   ├── chess-analysis/            ← symlink to repo
+#   │   └── chess-game-history/       ← symlink to repo
 #   ~/.openclaw/workspace-chess-ai-coach/
-#   │   ├── skills/                      ← symlinks to ~/.agents/skills/
-#   │   │   ├── chess-analysis  -> ~/.agents/skills/chess-analysis/
-#   │   │   └── chess-game-history -> ~/.agents/skills/chess-game-history/
-#   │   ├── AGENTS.md / SOUL.md / etc.   ← workspace definition files
+#   │   ├── skills/                    ← symlinks to ~/.agents/skills/
+#   │   ├── analyses/                  ← chess review files (auto-committed to GitHub)
+#   │   ├── AGENTS.md / SOUL.md / etc.← workspace definition files
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_WORKSPACE="$HOME/.openclaw/workspace-chess-ai-coach"
@@ -37,7 +39,7 @@ echo "Workspace:    $TARGET_WORKSPACE"
 echo ""
 
 # ── 1. Install skills GLOBALLY (source of truth for all agents) ─────────────
-echo "[1/3] Installing skills globally -> $GLOBAL_SKILLS ..."
+echo "[1/6] Installing skills globally -> $GLOBAL_SKILLS ..."
 
 mkdir -p "$GLOBAL_SKILLS"
 
@@ -70,7 +72,7 @@ fi
 
 # ── 2. Create workspace/skills/ with symlinks to global skills ──────────────
 echo ""
-echo "[2/3] Symlinking workspace/skills/ -> global skills ..."
+echo "[2/6] Symlinking workspace/skills/ -> global skills ..."
 
 mkdir -p "$TARGET_WORKSPACE/skills"
 
@@ -102,7 +104,7 @@ done
 
 # ── 3. Install workspace definition files (AGENTS.md, SOUL.md, etc.) ───────
 echo ""
-echo "[3/4] Installing workspace files -> $TARGET_WORKSPACE ..."
+echo "[3/6] Installing workspace files -> $TARGET_WORKSPACE ..."
 
 AGENTS_SRC="$SCRIPT_DIR/agents"
 if [ -d "$AGENTS_SRC" ]; then
@@ -111,7 +113,6 @@ if [ -d "$AGENTS_SRC" ]; then
             fname="$(basename "$file")"
             dest="$TARGET_WORKSPACE/$fname"
 
-            # Skip if workspace already has this file and it's different
             if [ -f "$dest" ]; then
                 if cmp -s "$file" "$dest"; then
                     echo "  [skip] $fname: already identical in workspace"
@@ -129,43 +130,47 @@ else
     echo "  Warning: agents directory not found, skipping"
 fi
 
-# ── 4. Install git-sync.sh (from chess-analysis skill) ─────────────────
+# ── 4. Create analyses directory ──────────────────────────────────────────
 echo ""
-echo "[4/4] Installing git-sync.sh -> $TARGET_WORKSPACE ..."
+echo "[4/6] Creating analyses directory..."
 
-GIT_SYNC_SRC="$SCRIPT_DIR/skills/chess-analysis/scripts/git-sync.sh"
-if [ -f "$GIT_SYNC_SRC" ]; then
-    chmod +x "$GIT_SYNC_SRC"
-    cp "$GIT_SYNC_SRC" "$TARGET_WORKSPACE/git-sync.sh"
-    echo "  [copy] git-sync.sh -> $TARGET_WORKSPACE"
+mkdir -p "$TARGET_WORKSPACE/analyses"
+echo "  [ok] $TARGET_WORKSPACE/analyses/"
+
+# ── 5. Git repo setup (chess-reviews-summary) ──────────────────────────
+echo ""
+echo "[5/6] Setting up Git repo for chess-reviews-summary..."
+
+GIT_DIR="$HOME/Projects/tutorials/chess-reviews-summary"
+if [ -d "$GIT_DIR/.git" ]; then
+    echo "  [ok] Git repo already exists: $GIT_DIR"
 else
-    echo "  Warning: git-sync.sh not found in chess-analysis/scripts/, skipping"
+    echo "  [init] Initializing new git repo: $GIT_DIR"
+    mkdir -p "$GIT_DIR"
+    cd "$GIT_DIR"
+    git init
+    git remote add origin git@github.com:wldandan/chess-reviews-summary.git
+    echo "  [ok] Git repo initialized with remote"
+    cd "$SCRIPT_DIR"
 fi
 
-# ── 5. Install OpenClaw hooks ─────────────────────────────────────────────
+# ── 6. Install OpenClaw Cron Job (backup auto-commit) ──────────────────
 echo ""
-echo "[5/5] Installing OpenClaw hooks -> ~/.openclaw/hooks/ ..."
+echo "[6/6] Setting up OpenClaw cron job (backup auto-commit)..."
 
-mkdir -p "$HOME/.openclaw/hooks"
-
-if [ -d "$SCRIPT_DIR/hooks" ]; then
-    for hook_dir in "$SCRIPT_DIR/hooks"/*; do
-        if [ -d "$hook_dir" ]; then
-            hook_name="$(basename "$hook_dir")"
-            dest="$HOME/.openclaw/hooks/$hook_name"
-
-            if [ -L "$dest" ]; then
-                echo "  [skip] $hook_name: already symlinked"
-            elif [ -e "$dest" ]; then
-                echo "  [skip] $hook_name: $dest exists"
-            else
-                echo "  [link] $hook_name -> $hook_dir"
-                ln -s "$hook_dir" "$dest"
-            fi
-        fi
-    done
+CRON_JOB_NAME="chess-reviews-auto-commit-backup"
+if openclaw cron list --json 2>/dev/null | grep -q "$CRON_JOB_NAME"; then
+    echo "  [skip] cron job '$CRON_JOB_NAME' already exists"
 else
-    echo "  Warning: hooks directory not found, skipping"
+    echo "  [create] $CRON_JOB_NAME (every 30m, isolated session, no-deliver)"
+    openclaw cron add \
+        --name "$CRON_JOB_NAME" \
+        --every "30m" \
+        --session isolated \
+        --no-deliver \
+        --description "Backup: auto-commit chess reviews to GitHub every 30 mins if missed" \
+        --message "Run the following shell command and reply HEARTBEAT_OK:\n\n  ~/.agents/skills/chess-analysis/scripts/commit-if-changed.sh"
+    echo "  [ok] cron job created"
 fi
 
 # ── Summary ─────────────────────────────────────────────────────────────────
@@ -175,8 +180,13 @@ echo ""
 echo "Global skills (~/.agents/skills/):"
 ls -la "$GLOBAL_SKILLS/" 2>/dev/null | grep "^d\|chess" | awk '{print "  " $0}' || echo "  (empty)"
 echo ""
-echo "Workspace skills (~/.openclaw/workspace-chess-ai-coach/skills/):"
-ls -la "$TARGET_WORKSPACE/skills/" 2>/dev/null | awk '{print "  " $0}' || echo "  (empty)"
+echo "Workspace (~/.openclaw/workspace-chess-ai-coach/):"
+echo "  skills/:"
+ls -la "$TARGET_WORKSPACE/skills/" 2>/dev/null | awk '{print "    " $0}' || echo "    (empty)"
+echo "  analyses/:"
+ls "$TARGET_WORKSPACE/analyses/" 2>/dev/null | awk '{print "    " $0}' || echo "    (empty)"
 echo ""
-echo "Workspace files:"
-ls "$TARGET_WORKSPACE/" 2>/dev/null | grep -v "^skills$\|^memory$\|^commands$\|^\.openclaw\|^\.DS" | awk '{print "  " $0}' || echo "  (empty)"
+echo "Git repo: $GIT_DIR"
+echo "Cron job: $CRON_JOB_NAME (every 30m, isolated)"
+echo ""
+echo "Run 'openclaw cron list' to verify cron job is active."
