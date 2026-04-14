@@ -18,6 +18,7 @@
 |-------|------|
 | `chess-analysis` | 棋局分析，支持 PGN/FEN/图片识别 |
 | `chess-game-history` | 查询 Chess.com/Lichess 用户历史对局 |
+| `chess-player-stats` | 棋手统计数据查询和分析 |
 
 ### Agents
 
@@ -28,6 +29,7 @@
 1. **分析棋谱**：直接发送 PGN、FEN 或棋盘截图
 2. **查询对局**：发送 Chess.com/Lichess 用户名或链接
 3. **复盘**：获取历史对局后可进一步分析
+4. **查询战绩**：发送用户名查询胜率、等级分等统计
 
 ## 项目结构
 
@@ -35,7 +37,18 @@
 ├── agents/          # Agent 配置和 Workflow
 ├── skills/          # Skill 定义
 │   ├── chess-analysis/
-│   └── chess-game-history/
+│   ├── chess-game-history/
+│   └── chess-player-stats/
+├── hooks/           # OpenClaw Hooks
+│   └── review-sync/ # 自动同步复盘到 Git
 ├── commands/        # 命令集
+├── claudecode-install.sh  # Claude Code 安装脚本
 └── openclaw-install.sh
 ```
+
+## 复盘同步
+
+复盘结果自动保存到 `~/.openclaw/workspace-chess-ai-coach/analyses/`，并通过双重机制同步到 Git：
+
+1. **主流程**：每次复盘后立即 commit + push
+2. **备用兜底**：Cron 每 30 分钟检查遗漏
