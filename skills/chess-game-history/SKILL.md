@@ -26,7 +26,29 @@ description: >
 
 ---
 
-## 工作流程（Try-Parse-Fallback）
+## 工作流程（检查本地缓存 → API → Fallback）
+
+### 第0步：检查本地缓存（优先）
+
+获取棋手最新对局前，先检查本地是否已有分析记录：
+
+```bash
+ANALYSES_DIR="$HOME/.openclaw/workspace-chess-ai-coach/analyses"
+
+# 列出该棋手已有的分析文件
+ls "$ANALYSES_DIR/"*_{username}_* 2>/dev/null
+```
+
+**判断逻辑：**
+```
+1. 从 API 获取目标对局基本信息（时间、对手、回合数）
+2. 构造文件名：{日期}_{白方}_{胜负}_{白方}_vs_{黑方}_{回合数}步.md
+3. 检查 ~/.openclaw/workspace-chess-ai-coach/analyses/ 是否存在同名文件
+4. 如已存在 → 直接读取本地文件输出，跳过 API 调用
+5. 如不存在 → 继续第1步 API 获取 PGN
+```
+
+**重要：** 每次获取对局前必须先执行此检查，避免重复分析同一对局，节省 API 调用。
 
 ### 第1步：API 获取 PGN（快）
 
