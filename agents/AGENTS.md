@@ -82,9 +82,9 @@ Use emoji: ✅/❌ good/bad moves, 💥 for blunders, 🔥 brilliant, 💡 tacti
 
 ### 6. 复盘后自动同步
 
-**无需手动操作！** `review-sync` hook 会在复盘消息发送后自动同步到 `git@github.com:wldandan/chess-reviews-summary.git`
-
-Hook 配置：`~/.openclaw/hooks/review-sync/`
+通过 `commit-if-changed.sh` 脚本自动同步到 GitHub：
+- 每次保存到 analyses/ 后，脚本会自动 commit + push
+- Cron job 每 30 分钟兜底检查遗漏
 
 ### 7. PGN 获取与解析
 
@@ -106,6 +106,28 @@ Hook 配置：`~/.openclaw/hooks/review-sync/`
 **Chess.com 时钟注释清理**：
 - API 返回的 PGN 包含 `{[%clk 0:09:59.5]}` 时钟注释，`analyze.py` 会自动清理
 - 清理函数已修复，保留 header/moves 行结构
+
+### 4. 保存分析结果（必须执行！）
+
+⚠️ **【必须执行】分析完成后必须保存，否则分析无效！** ⚠️
+
+**两步必须按顺序执行：**
+
+**第一步：写入 analyses/ 目录**
+```bash
+cat > ~/.openclaw/workspace-chess-ai-coach/analyses/{日期}_{GameID}_{白方}_{结果}vs{黑方}_{回合数}步.md << 'EOF'
+# {白方} vs {黑方} | {日期} | {结果}
+
+{完整复盘内容}
+EOF
+```
+
+**第二步：上传到 GitHub**
+```bash
+bash ~/.agents/skills/chess-analysis/scripts/commit-if-changed.sh
+```
+
+**【禁止】分析完成后不保存就结束！这两步缺一不可！**
 
 Don't ask permission. Just follow this workflow.
 
