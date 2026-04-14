@@ -21,15 +21,9 @@ if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --other
     exit 0
 fi
 
-# Commit + Push（白天只 commit，晚上才 push）
+# Commit + Push（立即同步）
 git add -A
 git commit -m "Auto-commit: chess reviews $(date '+%Y-%m-%d %H:%M')"
+git push origin main
 
-# 判断时间：白天（8:00-22:00）不 push，只 commit
-HOUR=$(date +%H)
-if [ "$HOUR" -ge 8 ] && [ "$HOUR" -lt 22 ]; then
-    echo "Done: committed only (daytime, no push)"
-else
-    git push origin main
-    echo "Done: committed and pushed"
-fi
+echo "Done: committed and pushed"
