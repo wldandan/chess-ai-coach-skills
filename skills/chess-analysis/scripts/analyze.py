@@ -23,7 +23,13 @@ DEFAULT_STOCKFISH_PATH = "/opt/homebrew/bin/stockfish"
 def find_stockfish(stockfish_path=None):
     if stockfish_path and Path(stockfish_path).exists():
         return stockfish_path
-    for p in ["/opt/homebrew/bin/stockfish", "/opt/homebrew/bin/stockfish-mac"]:
+    linux_paths = [
+        "/usr/games/stockfish",
+        "/usr/local/bin/stockfish",
+        "/opt/homebrew/bin/stockfish",
+        "/opt/homebrew/bin/stockfish-mac",
+    ]
+    for p in linux_paths:
         if Path(p).exists():
             return p
     return "stockfish"
