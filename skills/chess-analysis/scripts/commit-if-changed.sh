@@ -12,8 +12,9 @@ cd "$GIT_DIR"
 git config user.name "$AUTHOR_NAME" 2>/dev/null || true
 git config user.email "$AUTHOR_EMAIL" 2>/dev/null || true
 
-# 同步最新文件
-cp -f "$REVIEWS_DIR"/*.md "$GIT_DIR/" 2>/dev/null || true
+# 同步最新文件到 docs/ 目录
+mkdir -p "$GIT_DIR/docs"
+cp -f "$REVIEWS_DIR"/*.md "$GIT_DIR/docs/" 2>/dev/null || true
 
 # 检查是否有变更
 if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard 2>/dev/null)" ]; then
