@@ -88,15 +88,36 @@ Use emoji: ✅/❌ good/bad moves, 💥 for blunders, 🔥 brilliant, 💡 tacti
 
 ### 7. PGN 获取与解析
 
+**⚠️ 严格遵守 Try-Parse-Fallback 流程，禁止手动修复 PGN！**
+
 **Chess.com API PGN 数据损坏问题**：
 - API 返回的 PGN 有时在第 11 步附近开始数据损坏（如 `Bxe2` 变成不存在的着法）
-- 此时应使用 `agent-browser` 从网页直接获取正确 PGN
+- 此时**必须**使用 `agent-browser` 从网页直接获取正确 PGN
 
-**推荐流程**：
+**推荐流程（必须按顺序执行）**：
 1. 尝试用 `chess-game-history` 从 API 获取 PGN
-2. 如果 `analyze.py` 解析失败（illegal san 错误），改用 `agent-browser` 打开游戏页面
+2. 如果 `analyze.py` 解析失败（illegal san 错误），**必须**改用 `agent-browser` 打开游戏页面
 3. 在页面上点击 Share → PGN 按钮获取干净 PGN
 4. 保存到临时文件后交给 `analyze.py` 分析
+
+**禁止行为**：
+- ❌ 解析失败后手动修复 PGN 数据
+- ❌ 跳过 agent-browser 步骤
+- ❌ 凭感觉/记忆手动生成分析结果
+
+**正确示范**：
+```bash
+# Step 1: API 获取
+curl -s "https://api.chess.com/pub/player/aaronwang2026/games/2026/04" > /tmp/games.json
+
+# Step 2: 尝试解析
+python3 analyze.py /tmp/game.pgn 16
+# 如果失败...
+
+# Step 3: agent-browser fallback
+agent-browser open "https://www.chess.com/game/live/167336785350"
+# Share → PGN → 保存 → 再分析
+```
 
 **analyze.py CLI 参数注意**：
 - 使用 `--pgn-file` 后，depth 参数（如 `16`）必须放在最后
