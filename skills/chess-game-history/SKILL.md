@@ -42,7 +42,9 @@ ls "$ANALYSES_DIR/"*_{username}_* 2>/dev/null
 **判断逻辑：**
 ```
 1. 从 API 获取目标对局基本信息（时间、对手、回合数）
-2. 构造文件名：{日期}_{白方}_{胜负}_{白方}_vs_{黑方}_{回合数}步.md
+2. 构造文件名：{日期}_{game_id}_{白方}_{胜负}_{黑方}_{回合数}步_{time_control}.md
+   示例：2026-04-14_167293652644_aaronwang2026_执白胜_Clement924810_19步_10+0.md
+   time_control 格式："10+0"（10分钟+0秒加成）或 "30+0"（30分钟慢棋）
 3. 检查 ~/.openclaw/workspace-chess-ai-coach/analyses/ 是否存在同名文件
 4. 如已存在 → 直接读取本地文件输出，跳过 API 调用
 5. 如不存在 → 继续第1步 API 获取 PGN
