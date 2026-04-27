@@ -4,6 +4,12 @@ set -e
 # OpenClaw Workspace Installation Script
 # Installs agents, skills, and commands to ~/.openclaw/workspace-chess-ai-coach
 #
+# One-line install (clones repo to ~/Projects/chess-ai-coach-skills):
+#   curl -fsSL https://raw.githubusercontent.com/wldandan/chess-ai-coach-skills/main/openclaw-install.sh | bash
+#
+# To specify a different install location:
+#   OPENCLAW_REPO_DIR=/path/to/repo curl -fsSL ... | bash
+#
 # Skills are installed globally to ~/.agents/skills/ (unified, all agents use them).
 # Workspace gets symlinks pointing to global skills.
 #
@@ -28,7 +34,39 @@ set -e
 #   │   ├── analyses/                  ← chess review files (auto-committed to GitHub)
 #   │   ├── AGENTS.md / SOUL.md / etc.← workspace definition files
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_URL="https://github.com/wldandan/chess-ai-coach-skills"
+BRANCH="main"
+
+# ── Self-download mode: when run via pipe, clone repo permanently ─────────────
+REPO_INSTALL_DIR="${OPENCLAW_REPO_DIR:-$HOME/Projects/chess-ai-coach-skills}"
+
+# Detect if running from a pipe (stdin is script content, not a real file)
+_is_piped() {
+    # If BASH_SOURCE[0] is not a regular file, we're likely piped
+    [ ! -f "$BASH_SOURCE" ] && [ ! -d "$(dirname "$BASH_SOURCE" 2>/dev/null)" ]
+}
+
+if [ -n "$_OPENCLAW_REPO_DIR" ] && [ -d "$_OPENCLAW_REPO_DIR" ]; then
+    SCRIPT_DIR="$_OPENCLAW_REPO_DIR"
+elif _is_piped; then
+    echo "=== Self-download mode: cloning from $REPO_URL ==="
+
+    if [ -d "$REPO_INSTALL_DIR/.git" ]; then
+        echo "Repo already exists at $REPO_INSTALL_DIR, pulling latest..."
+        cd "$REPO_INSTALL_DIR" && git pull
+    else
+        echo "Cloning repo to $REPO_INSTALL_DIR ..."
+        mkdir -p "$(dirname "$REPO_INSTALL_DIR")"
+        git clone --depth 1 "$REPO_URL" "$REPO_INSTALL_DIR"
+    fi
+
+    echo "Running install from $REPO_INSTALL_DIR ..."
+    _OPENCLAW_SELF_DOWNLOADED=1 _OPENCLAW_REPO_DIR="$REPO_INSTALL_DIR" bash "$REPO_INSTALL_DIR/openclaw-install.sh"
+    exit $?
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
 TARGET_WORKSPACE="$HOME/.openclaw/workspace-chess-ai-coach"
 GLOBAL_SKILLS="$HOME/.agents/skills"
 SKILLS_SRC="$SCRIPT_DIR/skills"
@@ -38,8 +76,35 @@ echo "Global skills: $GLOBAL_SKILLS"
 echo "Workspace:    $TARGET_WORKSPACE"
 echo ""
 
+# ── 0. Install Stockfish if not present ─────────────────────────────────────
+echo "[0/7] Checking Stockfish..."
+
+check_stockfish() {
+    command -v stockfish >/dev/null 2>&1 || \
+    [ -f "/opt/homebrew/bin/stockfish" ] || \
+    [ -f "/opt/homebrew/bin/stockfish-mac" ] || \
+    [ -f "/usr/games/stockfish" ] || \
+    [ -f "/usr/local/bin/stockfish" ]
+}
+
+if check_stockfish; then
+    echo "  [ok] Stockfish found"
+else
+    echo "  [install] Stockfish not found, installing..."
+    if command -v brew >/dev/null 2>&1; then
+        brew install stockfish
+    elif command -v apt >/dev/null 2>&1; then
+        sudo apt install stockfish -y
+    else
+        echo "  [warn] No brew or apt found. Please install Stockfish manually:"
+        echo "         macOS: brew install stockfish"
+        echo "         Linux: sudo apt install stockfish"
+    fi
+fi
+
 # ── 1. Install skills GLOBALLY (source of truth for all agents) ─────────────
-echo "[1/6] Installing skills globally -> $GLOBAL_SKILLS ..."
+echo ""
+echo "[1/7] Installing skills globally -> $GLOBAL_SKILLS ..."
 
 mkdir -p "$GLOBAL_SKILLS"
 
@@ -72,11 +137,11 @@ fi
 
 # ── 2. Create workspace/skills/ with symlinks to global skills ──────────────
 echo ""
-echo "[2/6] Symlinking workspace/skills/ -> global skills ..."
+echo "[2/7] Symlinking workspace/skills/ -> global skills ..."
 
 mkdir -p "$TARGET_WORKSPACE/skills"
 
-for skill_name in chess-analysis chess-game-history; do
+for skill_name in chess-analysis chess-game-history chess-player-stats; do
     global_path="$GLOBAL_SKILLS/$skill_name"
     ws_link="$TARGET_WORKSPACE/skills/$skill_name"
 
@@ -104,7 +169,7 @@ done
 
 # ── 3. Install workspace definition files (AGENTS.md, SOUL.md, etc.) ───────
 echo ""
-echo "[3/6] Installing workspace files -> $TARGET_WORKSPACE ..."
+echo "[3/7] Installing workspace files -> $TARGET_WORKSPACE ..."
 
 AGENTS_SRC="$SCRIPT_DIR/agents"
 if [ -d "$AGENTS_SRC" ]; then
@@ -132,14 +197,14 @@ fi
 
 # ── 4. Create analyses directory ──────────────────────────────────────────
 echo ""
-echo "[4/6] Creating analyses directory..."
+echo "[4/7] Creating analyses directory..."
 
 mkdir -p "$TARGET_WORKSPACE/analyses"
 echo "  [ok] $TARGET_WORKSPACE/analyses/"
 
 # ── 5. Git repo setup (chess-reviews-summary) ──────────────────────────
 echo ""
-echo "[5/6] Setting up Git repo for chess-reviews-summary..."
+echo "[5/7] Setting up Git repo for chess-reviews-summary..."
 
 GIT_DIR="$HOME/Projects/tutorials/chess-reviews-summary"
 if [ -d "$GIT_DIR/.git" ]; then
@@ -156,7 +221,7 @@ fi
 
 # ── 6. Install OpenClaw Cron Job (backup auto-commit) ──────────────────
 echo ""
-echo "[6/6] Setting up OpenClaw cron job (backup auto-commit)..."
+echo "[6/7] Setting up OpenClaw cron job (backup auto-commit)..."
 
 CRON_JOB_NAME="chess-reviews-auto-commit-backup"
 if openclaw cron list --json 2>/dev/null | grep -q "$CRON_JOB_NAME"; then
