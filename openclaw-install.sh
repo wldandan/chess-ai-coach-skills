@@ -42,8 +42,10 @@ REPO_INSTALL_DIR="${OPENCLAW_REPO_DIR:-$HOME/Projects/chess-ai-coach-skills}"
 
 if [ -n "$_OPENCLAW_REPO_DIR" ] && [ -d "$_OPENCLAW_REPO_DIR" ]; then
     SCRIPT_DIR="$_OPENCLAW_REPO_DIR"
+    echo "[DBG] SCRIPT_DIR from _OPENCLAW_REPO_DIR: $SCRIPT_DIR"
 else
     base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)"
+    echo "[DBG] BASH_SOURCE[0]='${BASH_SOURCE[0]}' base_dir='$base_dir' skills_exists=$([ -d "$base_dir/skills" ] && echo yes || echo no)"
     if [ -z "$base_dir" ] || [ ! -d "$base_dir/skills" ]; then
         echo "=== Self-download mode: cloning from $REPO_URL ==="
         if [ -d "$REPO_INSTALL_DIR/.git" ]; then
@@ -59,6 +61,7 @@ else
         exit $?
     fi
     SCRIPT_DIR="$base_dir"
+    echo "[DBG] SCRIPT_DIR resolved: $SCRIPT_DIR"
 fi
 
 TARGET_WORKSPACE="$HOME/.openclaw/workspace-chess-ai-coach"
