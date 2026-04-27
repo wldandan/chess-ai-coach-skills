@@ -40,15 +40,26 @@ BRANCH="main"
 # ── Self-download mode: when run via pipe, clone repo permanently ─────────────
 REPO_INSTALL_DIR="${OPENCLAW_REPO_DIR:-$HOME/Projects/chess-ai-coach-skills}"
 
-# Detect if running from a pipe (stdin is script content, not a real file)
-_is_piped() {
-    # If BASH_SOURCE[0] is not a regular file, we're likely piped
-    [ ! -f "$BASH_SOURCE" ] && [ ! -d "$(dirname "$BASH_SOURCE" 2>/dev/null)" ]
+# Detect if running from a pipe: check if skills/ exists relative to SCRIPT_DIR
+_detect_script_dir() {
+    local dir="$(dirname "${BASH_SOURCE[0]}")"
+    # If skills/ exists next to script, it's a local clone
+    if [ -d "$dir/skills" ]; then
+        echo "$dir"
+        return 0
+    fi
+    # BASH_SOURCE[0] like /dev/fd/0 means piped
+    if [ "$(basename "$dir")" = "fd" ] || [ ! -e "$dir" ]; then
+        return 1
+    fi
+    return 1
 }
 
 if [ -n "$_OPENCLAW_REPO_DIR" ] && [ -d "$_OPENCLAW_REPO_DIR" ]; then
     SCRIPT_DIR="$_OPENCLAW_REPO_DIR"
-elif _is_piped; then
+elif _detect_script_dir >/dev/null 2>&1; then
+    SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+else
     echo "=== Self-download mode: cloning from $REPO_URL ==="
 
     if [ -d "$REPO_INSTALL_DIR/.git" ]; then
@@ -63,8 +74,6 @@ elif _is_piped; then
     echo "Running install from $REPO_INSTALL_DIR ..."
     _OPENCLAW_SELF_DOWNLOADED=1 _OPENCLAW_REPO_DIR="$REPO_INSTALL_DIR" bash "$REPO_INSTALL_DIR/openclaw-install.sh"
     exit $?
-else
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
 TARGET_WORKSPACE="$HOME/.openclaw/workspace-chess-ai-coach"
