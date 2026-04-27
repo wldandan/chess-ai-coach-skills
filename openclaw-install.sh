@@ -37,39 +37,28 @@ set -e
 REPO_URL="https://github.com/wldandan/chess-ai-coach-skills"
 BRANCH="main"
 
-# ── Self-download mode: when run via pipe, clone repo permanently ─────────────
+# ── Resolve SCRIPT_DIR: use explicit repo dir, or detect from BASH_SOURCE ─────
 REPO_INSTALL_DIR="${OPENCLAW_REPO_DIR:-$HOME/Projects/chess-ai-coach-skills}"
-
-# Try to resolve SCRIPT_DIR from BASH_SOURCE; if skills/ not found, self-download
-_resolve_script_dir() {
-    local dir
-    dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)"
-    if [ -n "$dir" ] && [ -d "$dir/skills" ]; then
-        echo "$dir"
-        return 0
-    fi
-    return 1
-}
 
 if [ -n "$_OPENCLAW_REPO_DIR" ] && [ -d "$_OPENCLAW_REPO_DIR" ]; then
     SCRIPT_DIR="$_OPENCLAW_REPO_DIR"
-elif _resolve_script_dir >/dev/null 2>&1; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 else
-    echo "=== Self-download mode: cloning from $REPO_URL ==="
-
-    if [ -d "$REPO_INSTALL_DIR/.git" ]; then
-        echo "Repo already exists at $REPO_INSTALL_DIR, pulling latest..."
-        cd "$REPO_INSTALL_DIR" && git pull
-    else
-        echo "Cloning repo to $REPO_INSTALL_DIR ..."
-        mkdir -p "$(dirname "$REPO_INSTALL_DIR")"
-        git clone --depth 1 "$REPO_URL" "$REPO_INSTALL_DIR"
+    base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)"
+    if [ -z "$base_dir" ] || [ ! -d "$base_dir/skills" ]; then
+        echo "=== Self-download mode: cloning from $REPO_URL ==="
+        if [ -d "$REPO_INSTALL_DIR/.git" ]; then
+            echo "Repo already exists at $REPO_INSTALL_DIR, pulling latest..."
+            cd "$REPO_INSTALL_DIR" && git pull
+        else
+            echo "Cloning repo to $REPO_INSTALL_DIR ..."
+            mkdir -p "$(dirname "$REPO_INSTALL_DIR")"
+            git clone --depth 1 "$REPO_URL" "$REPO_INSTALL_DIR"
+        fi
+        echo "Running install from $REPO_INSTALL_DIR ..."
+        _OPENCLAW_REPO_DIR="$REPO_INSTALL_DIR" bash "$REPO_INSTALL_DIR/openclaw-install.sh"
+        exit $?
     fi
-
-    echo "Running install from $REPO_INSTALL_DIR ..."
-    _OPENCLAW_REPO_DIR="$REPO_INSTALL_DIR" bash "$REPO_INSTALL_DIR/openclaw-install.sh"
-    exit $?
+    SCRIPT_DIR="$base_dir"
 fi
 
 TARGET_WORKSPACE="$HOME/.openclaw/workspace-chess-ai-coach"
