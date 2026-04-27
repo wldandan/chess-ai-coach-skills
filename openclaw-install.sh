@@ -42,11 +42,14 @@ REPO_INSTALL_DIR="${OPENCLAW_REPO_DIR:-$HOME/Projects/chess-ai-coach-skills}"
 
 if [ -n "$_OPENCLAW_REPO_DIR" ] && [ -d "$_OPENCLAW_REPO_DIR" ]; then
     SCRIPT_DIR="$_OPENCLAW_REPO_DIR"
-    echo "[DBG] SCRIPT_DIR from _OPENCLAW_REPO_DIR: $SCRIPT_DIR"
 else
-    base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)"
-    echo "[DBG] BASH_SOURCE[0]='${BASH_SOURCE[0]}' base_dir='$base_dir' skills_exists=$([ -d "$base_dir/skills" ] && echo yes || echo no)"
-    if [ -z "$base_dir" ] || [ ! -d "$base_dir/skills" ]; then
+    _bs="${BASH_SOURCE[0]}"
+    _resolved_dir=""
+    if [ -n "$_bs" ]; then
+        _resolved_dir="$(cd "$(dirname "$_bs")" && pwd 2>/dev/null)"
+    fi
+    # Trigger self-download if BASH_SOURCE is empty, or if skills/ dir is missing/wrong
+    if [ -z "$_resolved_dir" ] || [ ! -d "$_resolved_dir/skills/chess-analysis" ]; then
         echo "=== Self-download mode: cloning from $REPO_URL ==="
         if [ -d "$REPO_INSTALL_DIR/.git" ]; then
             echo "Repo already exists at $REPO_INSTALL_DIR, pulling latest..."
@@ -60,8 +63,7 @@ else
         _OPENCLAW_REPO_DIR="$REPO_INSTALL_DIR" bash "$REPO_INSTALL_DIR/openclaw-install.sh"
         exit $?
     fi
-    SCRIPT_DIR="$base_dir"
-    echo "[DBG] SCRIPT_DIR resolved: $SCRIPT_DIR"
+    SCRIPT_DIR="$_resolved_dir"
 fi
 
 TARGET_WORKSPACE="$HOME/.openclaw/workspace-chess-ai-coach"
