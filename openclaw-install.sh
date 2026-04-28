@@ -196,14 +196,14 @@ fi
 
 # ── 4. Create analyses directory ──────────────────────────────────────────
 echo ""
-echo "[4/7] Creating analyses directory..."
+echo "[4/8] Creating analyses directory..."
 
 mkdir -p "$TARGET_WORKSPACE/analyses"
 echo "  [ok] $TARGET_WORKSPACE/analyses/"
 
 # ── 5. Git repo setup (chess-reviews-summary) ──────────────────────────
 echo ""
-echo "[5/7] Setting up Git repo for chess-reviews-summary..."
+echo "[5/8] Setting up Git repo for chess-reviews-summary..."
 
 GIT_DIR="$HOME/Projects/tutorials/chess-reviews-summary"
 if [ -d "$GIT_DIR/.git" ]; then
@@ -220,7 +220,7 @@ fi
 
 # ── 6. Install OpenClaw Cron Job (backup auto-commit) ──────────────────
 echo ""
-echo "[6/7] Setting up OpenClaw cron job (backup auto-commit)..."
+echo "[6/8] Setting up OpenClaw cron job (backup auto-commit)..."
 
 CRON_JOB_NAME="chess-reviews-auto-commit-backup"
 if openclaw cron list --json 2>/dev/null | grep -q "$CRON_JOB_NAME"; then
@@ -235,6 +235,21 @@ else
         --description "Backup: auto-commit chess reviews to GitHub every 30 mins if missed" \
         --message "Run the following shell command and reply HEARTBEAT_OK:\n\n  ~/.agents/skills/chess-analysis/scripts/commit-if-changed.sh"
     echo "  [ok] cron job created"
+fi
+
+# ── 7. Register agent with OpenClaw ────────────────────────────────────────
+echo ""
+echo "[7/8] Registering chess-ai-coach agent with OpenClaw..."
+
+if openclaw agents list --json 2>/dev/null | grep -q '"id": "chess-ai-coach"'; then
+    echo "  [skip] chess-ai-coach agent already registered"
+else
+    echo "  [register] chess-ai-coach agent..."
+    openclaw agents add \
+        --name chess-ai-coach \
+        --workspace "$TARGET_WORKSPACE" \
+        --non-interactive
+    echo "  [ok] chess-ai-coach agent registered"
 fi
 
 # ── Summary ─────────────────────────────────────────────────────────────────
@@ -252,5 +267,7 @@ ls "$TARGET_WORKSPACE/analyses/" 2>/dev/null | awk '{print "    " $0}' || echo "
 echo ""
 echo "Git repo: $GIT_DIR"
 echo "Cron job: $CRON_JOB_NAME (every 30m, isolated)"
+echo "Agent:    chess-ai-coach (OpenClaw registered)"
 echo ""
-echo "Run 'openclaw cron list' to verify cron job is active."
+echo "Run 'openclaw cron list' to verify cron job."
+echo "Run 'openclaw agents list' to verify agent registration."

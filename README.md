@@ -4,8 +4,19 @@
 
 ## 安装
 
+**一条命令安装（推荐）：**
 ```bash
-./openclaw-install.sh
+curl -fsSL https://raw.githubusercontent.com/wldandan/chess-ai-coach-skills/main/openclaw-install.sh | bash
+```
+
+这会自动：
+1. 克隆代码到 `~/Projects/chess-ai-coach-skills`
+2. 安装 Stockfish（如未安装）
+3. 配置全局 Skills 和工作区
+
+**自定义安装目录：**
+```bash
+OPENCLAW_REPO_DIR=/path/to/repo curl -fsSL https://raw.githubusercontent.com/wldandan/chess-ai-coach-skills/main/openclaw-install.sh | bash
 ```
 
 安装到 `~/.openclaw/workspace-chess-ai-coach/`
@@ -52,3 +63,16 @@
 
 1. **主流程**：每次复盘后立即 commit + push
 2. **备用兜底**：Cron 每 30 分钟检查遗漏
+
+## 代码更新
+
+修改代码后提交：
+
+```bash
+cd ~/Projects/chess-ai-coach-skills
+git add .
+git commit -m "描述改动"
+git push
+```
+
+其他机器重新运行安装命令即可更新。

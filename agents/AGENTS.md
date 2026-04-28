@@ -27,6 +27,26 @@ When the user provides input for chess analysis, follow this workflow:
 - **棋盘截图/图片** → 先用 image 工具识别棋盘
 - **用户名 + 查询历史对局** → chess-game-history
 
+### 1.5 📋 复盘前先列流程（供用户参考）
+收到分析请求时，**先枚举使用的 skills 和执行步骤**（不等待确认，直接执行）。例如：
+
+```
+🔧 使用 Skills 的工作流程：
+
+Step 1️⃣  chess-game-history（获取棋谱）
+   ├── API 获取 PGN 或 agent-browser 备用
+   └── 保存 PGN 到 /tmp/game.pgn
+
+Step 2️⃣  chess-analysis（Stockfish 分析）
+   └── analyze.py 深度分析 + 生成报告
+
+Step 3️⃣  保存结果
+   ├── 写入 analyses/ 目录
+   └── commit-if-changed.sh 同步 GitHub
+```
+
+**⚠️ 这一步必须显式执行，不能跳过。**
+
 ### 2. Fetch — Try-Parse-Fallback
 
 **Step 1（API 获取 PGN）**：
@@ -66,14 +86,15 @@ analyze_game(pgn, depth=16)
 - Default depth=16，可调整为 20（更精确但更慢）
 
 ### 4. Output Structure
-Always present analysis with:
-- **Game Info**: players, result, time control, opening, ECO code
-- **Evaluation Timeline**: color-coded per-move scores (🟢/⚖️/🔴/💀/👑)
-- **Mistakes & Blunders**: highlight moves where evaluation dropped >0.3 (mistake) or >1.0 (blunder)
-- **Critical Moves**: the turning points that changed the game's evaluation significantly
-- **Key Takeaways**: 2-3 actionable lessons the player can apply
 
-Use emoji: ✅/❌ good/bad moves, 💥 for blunders, 🔥 brilliant, 💡 tactical insight, ♟️ positional.
+**⚠️ 必须严格遵循 `skills/chess-analysis/ANALYSIS_TEMPLATE.md` 模板输出分析结果！**
+
+模板核心要求：
+- **正文**：总体评价 + 棋局概览 + 亮点时刻 + **关键失误（仅 3-5 个最重要）** + 可以更好的地方 + 开局学习建议 + 今日收获
+- **附录**：局面评估走势与失误详情**合一表**（变化列填具体数字）+ 关键 FEN（可选）
+- **失误标记**：💥 = BLUNDER（>1.0兵）| ⚠️ = MISTAKE（0.3-1.0兵）
+
+❌ **禁止**：输出全部失误列表（31 个全部列出是不对的）、正文和附录分开成两个表
 
 ### 5. Skill Locations
 - `skills/chess-analysis` — analysis logic + Stockfish script

@@ -26,7 +26,7 @@ description: >
 
 ---
 
-## 工作流程（检查本地缓存 → API → Fallback）
+## 工作流程（检查本地缓存 → agent-browser 首选 → API 辅助）
 
 ### 第0步：检查本地缓存（优先）
 
@@ -46,55 +46,19 @@ ls "$ANALYSES_DIR/"*_{username}_* 2>/dev/null
    示例：2026-04-14_167293652644_aaronwang2026_执白胜_Clement924810_19步_10+0.md
    time_control 格式："10+0"（10分钟+0秒加成）或 "30+0"（30分钟慢棋）
 3. 检查 ~/.openclaw/workspace-chess-ai-coach/analyses/ 是否存在同名文件
-4. 如已存在 → 直接读取本地文件输出，跳过 API 调用
-5. 如不存在 → 继续第1步 API 获取 PGN
+4. 如已存在 → 直接读取本地文件输出，跳过所有获取
+5. 如不存在 → 继续第1步
 ```
 
-**重要：** 每次获取对局前必须先执行此检查，避免重复分析同一对局，节省 API 调用。
+**重要：** 每次获取对局前必须先执行此检查，避免重复分析同一对局。
 
-### 第1步：API 获取 PGN（快）
+---
 
-**适用**：用户提供了 game ID，或者需要先搜索找到目标对局。
+### 第1步：agent-browser 获取 PGN（首选）
 
-```bash
-# Chess.com — 获取某月对局
-curl "https://api.chess.com/pub/player/{username}/games/{YYYY}/{MM}"
+**适用**：用户提供了 game ID 或游戏页面 URL，直接用浏览器获取 PGN，确保 100% 准确。
 
-# Chess.com — 获取最近对局（按时间倒序）
-curl "https://api.chess.com/pub/player/{username}/games?max=100&until=YYYY-MM-DD"
-
-# Chess.com — 玩家基本信息
-curl "https://api.chess.com/pub/player/{username}"
-
-# Lichess — 批量导出
-curl "https://lichess.org/api/games/user/{username}?max=100&opts=pgn,evals,opening"
-```
-
-**返回数据包含**：
-- `pgn` — PGN 字符串
-- `white` / `black` — 对手信息（用户名、ELO）
-- `result`、`end_time`、`time_control`
-- `url` — 游戏页面 URL（含 game ID）
-
-### 第2步：尝试解析（自动判断）
-
-用 `analyze.py` 尝试解析 PGN：
-
-```python
-# 伪代码
-try:
-    analyze_game(pgn, depth=16)  # 如果 PGN 损坏会抛出 illegal san 异常
-    print("✅ PGN 正常，直接分析")
-except ValueError as e:
-    print("⚠️ PGN 损坏，切换到浏览器获取")
-    # 触发 agent-browser 流程
-```
-
-### 第3步（Fallback）：agent-browser 重新获取 PGN（准）
-
-**触发条件**：analyze.py 解析失败（Chess.com API PGN 数据损坏）
-
-**用户提示**：
+**用户提示：**
 ```
 🔍 正在打开对局页面...
 ⏳ 正在加载棋谱...
@@ -102,22 +66,63 @@ except ValueError as e:
 ✅ 获取完成，开始分析...
 ```
 
-**操作步骤**：
+**操作步骤：**
 ```bash
-# 复用已有 session，打开游戏页面
+# 打开游戏页面
 agent-browser open "https://www.chess.com/game/live/{game_id}"
 agent-browser wait --load networkidle
 
-# 点击 Share 按钮（通过 snapshot 找到 ref）
+# 找到并点击 Share 按钮
+agent-browser snapshot -i
+# 根据 snapshot 输出找到 Share 按钮的 ref，点击它
 agent-browser click @share_ref
 agent-browser wait 1000
 
-# 点击 PGN 按钮
-agent-browser click @pgn_ref
+# 在弹出的 Share 面板中找到 PGN 按钮并点击
+agent-browser snapshot -i
+agent-browser click @pgn_button_ref
 agent-browser wait 1000
 
-# 获取 PGN 文本
-agent-browser get text @pgn_textbox_ref
+# 获取 PGN 文本框内容
+agent-browser snapshot -i
+agent-browser get text @pgn_text_ref
+```
+
+**注意**：每次 snapshot 后 refs 会变化，必须在每次 click 前重新 snapshot。
+
+**PGN 保存：**
+```bash
+# 将获取到的 PGN 保存到临时文件
+echo "$PGN_TEXT" > /tmp/game_pgn_{game_id}.pgn
+```
+
+---
+
+### 第2步：API 获取对局元数据（辅助）
+
+**目的**：用 API 获取游戏的详细信息（日期、对手、回合数、时间控制），用于构造分析文件名。
+
+```bash
+# 如果有 game_id，直接获取该对局的元数据
+curl "https://api.chess.com/pub/game/{game_id}"
+
+# 或通过用户名和月份筛选（用户没给 game_id 时）
+curl "https://api.chess.com/pub/player/{username}/games/{YYYY}/{MM}"
+```
+
+**用途**：
+- 构造分析报告的文件名
+- 获取 Opening 信息
+- 验证对局基本信息（白方、黑方、结果）
+
+---
+
+### 第3步：分析 PGN
+
+用 `analyze.py` 解析 PGN 并生成分析报告：
+
+```bash
+python3 ~/.agents/skills/chess-analysis/scripts/analyze.py --pgn-file /tmp/game_pgn_{game_id}.pgn 16
 ```
 
 ---
@@ -140,19 +145,20 @@ agent-browser get text @pgn_textbox_ref
 
 ## 重要提示
 
-- **Chess.com PGN 损坏**：约 20-30% 的对局 API PGN 在第 11 步附近损坏（着法不合法）。先 try-parse，失败再 fallback 到浏览器。
-- **Lichess 数据较干净**：Lichess API 的 PGN 通常可直接使用，fallback 情况较少。
+- **PGN 获取优先用 agent-browser**：Chess.com API 返回的 PGN 有 20-30% 损坏率，直接用浏览器获取最可靠。
+- **API 的作用是获取元数据**：日期、对手、评级、time control 等信息仍从 API 获取。
+- **Lichess 数据较干净**：Lichess API 的 PGN 通常可直接使用，但仍建议用 agent-browser 作为首选。
 - **Game ID 获取**：用户没给 ID 时，用 API 按时间/月份筛选找到目标对局。
 - **Rate Limit**：Chess.com 约 1 req/sec，Lichess 约 5 req/sec。
 - **隐私**：Lichess 私密用户无法获取，请告知用户。
 
 ## 后续处理
 
-PGN 验证通过后，交给 `chess-analysis` skill 进行详细分析：
+PGN 获取完成后，交给 `chess-analysis` skill 进行详细分析：
 
 ```bash
 # 调用 chess-analysis skill 的 analyze.py
-python3 ~/.agents/skills/chess-analysis/scripts/analyze.py --pgn-file /tmp/game.pgn 16
+python3 ~/.agents/skills/chess-analysis/scripts/analyze.py --pgn-file /tmp/game_pgn_{game_id}.pgn 16
 ```
 
 **或**：直接调用 `chess-analysis` skill 进行完整复盘分析。
