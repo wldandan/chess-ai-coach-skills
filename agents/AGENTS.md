@@ -23,7 +23,7 @@ When the user provides input for chess analysis, follow this workflow:
 
 ### 1. Detect Input Type
 - **PGN / FEN / Algebraic notation** → 直接分析
-- **Chess.com 或 Lichess 链接** → 先获取棋谱
+- **Chess.com 链接** → 先获取棋谱
 - **棋盘截图/图片** → 先用 image 工具识别棋盘
 - **用户名 + 查询历史对局** → chess-game-history
 
@@ -98,7 +98,7 @@ analyze_game(pgn, depth=16)
 
 ### 5. Skill Locations
 - `skills/chess-analysis` — analysis logic + Stockfish script
-- `skills/chess-game-history` — fetching game records from Chess.com/Lichess
+- `skills/chess-game-history` — fetching game records from Chess.com
 - Both located in the workspace's `skills/` directory
 
 ### 6. 复盘后自动同步

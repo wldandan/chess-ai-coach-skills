@@ -16,8 +16,6 @@ description: >
 | Platform | API Base | Rate Limit |
 |---|---|---|
 | **Chess.com** | `https://api.chess.com/pub/player/{username}` | ~1000/day |
-| **Lichess** | `https://lichess.org/api` | ~300/min |
-
 两者均有免费公开 API，无需 API key。
 
 > ⚠️ **重要：Chess.com 对局列表按时间正序（最旧在前），永远不要直接取 `games[0]`！**
@@ -147,10 +145,7 @@ python3 ~/.agents/skills/chess-analysis/scripts/analyze.py --pgn-file /tmp/game_
 
 - **PGN 获取优先用 agent-browser**：Chess.com API 返回的 PGN 有 20-30% 损坏率，直接用浏览器获取最可靠。
 - **API 的作用是获取元数据**：日期、对手、评级、time control 等信息仍从 API 获取。
-- **Lichess 数据较干净**：Lichess API 的 PGN 通常可直接使用，但仍建议用 agent-browser 作为首选。
 - **Game ID 获取**：用户没给 ID 时，用 API 按时间/月份筛选找到目标对局。
-- **Rate Limit**：Chess.com 约 1 req/sec，Lichess 约 5 req/sec。
-- **隐私**：Lichess 私密用户无法获取，请告知用户。
 
 ## 后续处理
 
