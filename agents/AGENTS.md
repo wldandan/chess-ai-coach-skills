@@ -125,7 +125,9 @@ analyze_game(pgn, depth=16)
 💾 正在保存分析结果...
 ☁️ 正在同步到 GitHub...
 🔍 正在验证 ChessLens 页面是否已更新...
-✅ 已确认出现在 https://wldandan.github.io/chess-reviews-summary/
+   ├── 对比本地 md 文件与网页记录的 {日期}_{GameID}_... 文件名是否一致
+   └── 核对关键字段（对手、结果、步数）是否匹配
+✅ ChessLens 页面验证通过，内容与本地分析一致
 ```
 或 fallback 时：
 ```
@@ -137,7 +139,9 @@ analyze_game(pgn, depth=16)
 💾 正在保存分析结果...
 ☁️ 正在同步到 GitHub...
 🔍 正在验证 ChessLens 页面是否已更新...
-✅ 已确认出现在 https://wldandan.github.io/chess-reviews-summary/
+   ├── 对比本地 md 文件与网页记录的 {日期}_{GameID}_... 文件名是否一致
+   └── 核对关键字段（对手、结果、步数）是否匹配
+✅ ChessLens 页面验证通过，内容与本地分析一致
 ```
 
 1. 尝试用 `chess-game-history` 从 API 获取 PGN
