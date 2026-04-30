@@ -132,7 +132,7 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 
 **保存路径：**
 ```
-~/.openclaw/workspace-chess-ai-coach/analyses/
+$HOME/chessLens/chess-reviews-summary/docs/
 ```
 
 **文件名格式：**
@@ -165,12 +165,11 @@ python3 chess-analysis/scripts/analyze.py "$PGN" 20 --stockfish-path /custom/pat
 
 **注意：** 保存动作在分析输出之后执行，不要影响正常回复速度。
 
-**双重机制：**
-1. **主流程（生成后立即）**：每次保存复盘文档到 analyses/ 后，立即调用脚本 commit + push：
-   ```bash
-   ~/.agents/skills/chess-analysis/scripts/commit-if-changed.sh
-   ```
-2. **备用兜底（Cron 每30分钟）**：OpenClaw cron job（ID: `chess-reviews-auto-commit-backup`）定期检测 analyses 目录，如有漏提交则补上。
+**同步机制：**
+每次保存复盘文档到 docs/ 后，立即调用脚本 commit + push：
+```bash
+~/.agents/skills/chess-analysis/scripts/commit-if-changed.sh
+```
 
 ## 响应风格
 

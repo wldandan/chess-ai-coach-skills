@@ -31,7 +31,7 @@ description: >
 获取棋手最新对局前，先检查本地是否已有分析记录：
 
 ```bash
-ANALYSES_DIR="$HOME/.openclaw/workspace-chess-ai-coach/analyses"
+ANALYSES_DIR="$HOME/chessLens/chess-reviews-summary/docs"
 
 # 列出该棋手已有的分析文件
 ls "$ANALYSES_DIR/"*_{username}_* 2>/dev/null
@@ -43,7 +43,7 @@ ls "$ANALYSES_DIR/"*_{username}_* 2>/dev/null
 2. 构造文件名：{日期}_{game_id}_{白方}_{胜负}_{黑方}_{回合数}步_{time_control}.md
    示例：2026-04-14_167293652644_aaronwang2026_执白胜_Clement924810_19步_10+0.md
    time_control 格式："10+0"（10分钟+0秒加成）或 "30+0"（30分钟慢棋）
-3. 检查 ~/.openclaw/workspace-chess-ai-coach/analyses/ 是否存在同名文件
+3. 检查 $HOME/chessLens/chess-reviews-summary/docs/ 是否存在同名文件
 4. 如已存在 → 直接读取本地文件输出，跳过所有获取
 5. 如不存在 → 继续第1步
 ```
@@ -62,7 +62,7 @@ ls "$GIT_DIR/docs/"*_{game_id}_* 2>/dev/null
 
 **判断逻辑：**
 ```
-1. 如果本地 analyses/ 已存在 → 直接读取本地文件输出
+1. 如果本地 docs/ 已存在 → 直接读取本地文件输出
 2. 如果 GitHub docs/ 已存在 → 拉回本地后读取输出
 3. 两个都没有 → 继续第1步获取 PGN 并分析
 ```

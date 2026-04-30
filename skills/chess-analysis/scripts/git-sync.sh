@@ -5,7 +5,7 @@ set -e
 # Syncs review results to the chess-reviews-summary repository
 
 REVIEWS_REPO="git@github.com:wldandan/chess-reviews-summary.git"
-REVIEWS_DIR="$HOME/.openclaw/chess-reviews-summary"
+REVIEWS_DIR="$HOME/chessLens/chess-reviews-summary"
 
 # Function to sync reviews
 sync_reviews() {

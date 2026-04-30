@@ -3,8 +3,8 @@
 
 set -e
 
-REVIEWS_DIR="$HOME/.openclaw/workspace-chess-ai-coach/analyses"
-GIT_DIR="$HOME/Projects/tutorials/chess-reviews-summary"
+REVIEWS_DIR="$HOME/chessLens/chess-reviews-summary/docs"
+GIT_DIR="$HOME/chessLens/chess-reviews-summary"
 AUTHOR_NAME="aaronwang2026 Analyst"
 AUTHOR_EMAIL="5109343@qq.com"
 
