@@ -50,6 +50,23 @@ ls "$ANALYSES_DIR/"*_{username}_* 2>/dev/null
 
 **重要：** 每次获取对局前必须先执行此检查，避免重复分析同一对局。
 
+### 第0.5步：检查 GitHub docs 是否已有分析
+
+本地没有时，进一步检查 GitHub 是否已有该对局分析：
+
+```bash
+GIT_DIR="$HOME/Projects/tutorials/chess-reviews-summary"
+# 用 game_id 查找 GitHub docs 目录是否有该文件
+ls "$GIT_DIR/docs/"*_{game_id}_* 2>/dev/null
+```
+
+**判断逻辑：**
+```
+1. 如果本地 analyses/ 已存在 → 直接读取本地文件输出
+2. 如果 GitHub docs/ 已存在 → 拉回本地后读取输出
+3. 两个都没有 → 继续第1步获取 PGN 并分析
+```
+
 ---
 
 ### 第1步：agent-browser 获取 PGN（首选）

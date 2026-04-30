@@ -34,8 +34,11 @@ When the user provides input for chess analysis, follow this workflow:
 🔧 使用 Skills 的工作流程：
 
 Step 1️⃣  chess-game-history（获取棋谱）
-   ├── API 获取 PGN 或 agent-browser 备用
-   └── 保存 PGN 到 /tmp/game.pgn
+   ├── 从 API 获取最新对局 ID
+   ├── 检查 analyses/ 本地是否已有该 ID 分析
+   └── 检查 GitHub docs/ 是否已有该 ID 分析
+       ├── 如已有 → 拉回本地，跳过分析
+       └── 如没有 → 获取 PGN
 
 Step 2️⃣  chess-analysis（Stockfish 分析）
    └── analyze.py 深度分析 + 生成报告
@@ -43,6 +46,9 @@ Step 2️⃣  chess-analysis（Stockfish 分析）
 Step 3️⃣  保存结果
    ├── 写入 analyses/ 目录
    └── commit-if-changed.sh 同步 GitHub
+
+Step 4️⃣  验证 ChessLens 页面
+   └── 对比 亮点/失误/步数 字段与列表页是否一致
 ```
 
 **⚠️ 这一步必须显式执行，不能跳过。**
