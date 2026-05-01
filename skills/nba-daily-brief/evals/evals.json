@@ -1,0 +1,23 @@
+{
+  "skill_name": "nba-daily-brief",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "今天 NBA 比赛结果是什么？",
+      "expected_output": "今日所有比赛的比分结果，文字摘要 + 表格形式，包含比赛队伍、得分、胜负",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "最近一场湖人的比赛，球员数据怎么样？",
+      "expected_output": "湖人最近一场比赛的球员得分/助攻/篮板数据表格",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "谁是本赛季的得分王和助攻王？",
+      "expected_output": "得分榜和助攻榜 Top 5 球员数据，含球队、场均得分/助攻",
+      "files": []
+    }
+  ]
+}
