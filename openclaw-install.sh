@@ -147,11 +147,11 @@ if [ -f "$MAIN_SOUL" ]; then
         echo "  [skip] Chess section already exists"
     elif grep -q "sessions_send.*chess-ai-coach" "$MAIN_SOUL" 2>/dev/null; then
         echo "  [patch] Removing delegation to chess-ai-coach, enabling direct processing..."
-        python3 << 'PYEOF'
+        MAIN_SOUL_PATH="$HOME/.openclaw/workspace/SOUL.md"
+        python3 << PYEOF
 import re
-with open('$MAIN_SOUL', 'r') as f:
+with open("$MAIN_SOUL_PATH", 'r') as f:
     content = f.read()
-# 替换旧的 delegation 段落为直接处理
 new_section = """## 棋类相关需求
 
 当用户提到以下内容时，直接处理（不 delegation）：
@@ -160,24 +160,25 @@ new_section = """## 棋类相关需求
 - Chess.com 用户名查询
 
 **处理方式**：
-使用 `chess-game-history` skill 获取棋谱，`chess-analysis` skill 进行 Stockfish 分析。
-参考 `~/.agents/skills/chess-game-history/SKILL.md` 和 `~/.agents/skills/chess-analysis/SKILL.md`。
+使用 \`chess-game-history\` skill 获取棋谱，\`chess-analysis\` skill 进行 Stockfish 分析。
+参考 \`~/.agents/skills/chess-game-history/SKILL.md\` 和 \`~/.agents/skills/chess-analysis/SKILL.md\`。
 
 **共享资源**：
-- 分析结果保存到 `$HOME/chessLens/chess-reviews-summary/docs/`
+- 分析结果保存到 \`\$HOME/chessLens/chess-reviews-summary/docs/\`
 - 与 chess-ai-coach agent 共用同一份 analyses
 
 """
 content = re.sub(r'## 棋类相关需求.*?(?=\n## Vibe|\n## Boundaries)', new_section, content, flags=re.DOTALL, count=1)
-with open('$MAIN_SOUL', 'w') as f:
+with open('$MAIN_SOUL_PATH', 'w') as f:
     f.write(content)
 PYEOF
         echo "  [ok] Updated"
     else
         echo "  [insert] Adding chess section to SOUL.md..."
-        python3 << 'PYEOF'
+        MAIN_SOUL_PATH="$HOME/.openclaw/workspace/SOUL.md"
+        python3 << PYEOF
 import re
-with open('$MAIN_SOUL', 'r') as f:
+with open("$MAIN_SOUL_PATH", 'r') as f:
     content = f.read()
 new_section = """
 ## 棋类相关需求
@@ -188,20 +189,19 @@ new_section = """
 - Chess.com 用户名查询
 
 **处理方式**：
-使用 `chess-game-history` skill 获取棋谱，`chess-analysis` skill 进行 Stockfish 分析。
-参考 `~/.agents/skills/chess-game-history/SKILL.md` 和 `~/.agents/skills/chess-analysis/SKILL.md`。
+使用 \`chess-game-history\` skill 获取棋谱，\`chess-analysis\` skill 进行 Stockfish 分析。
+参考 \`~/.agents/skills/chess-game-history/SKILL.md\` 和 \`~/.agents/skills/chess-analysis/SKILL.md\`。
 
 **共享资源**：
-- 分析结果保存到 `$HOME/chessLens/chess-reviews-summary/docs/`
+- 分析结果保存到 \`\$HOME/chessLens/chess-reviews-summary/docs/\`
 - 与 chess-ai-coach agent 共用同一份 analyses
 
 """
-# 插入到 ## Vibe 或 ## Boundaries 之前
 if re.search(r'\n## Vibe', content):
     content = re.sub(r'(\n## Vibe)', new_section + r'\1', content, count=1)
 elif re.search(r'\n## Boundaries', content):
     content = re.sub(r'(\n## Boundaries)', new_section + r'\1', content, count=1)
-with open('$MAIN_SOUL', 'w') as f:
+with open('$MAIN_SOUL_PATH', 'w') as f:
     f.write(content)
 PYEOF
         echo "  [ok] Inserted"
